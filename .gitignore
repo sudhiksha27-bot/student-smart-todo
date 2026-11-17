@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables & local databases
+.env
+*.db
+
+# Temporary automation profiles & scratch scripts
+chrome_*_profile*
+test_cdp.py
+capture_demo.py
+take_clean_screens.py
+capture_all_demo_screenshots.py
+run_demo.py
+push_repo.py
+push_to_github.bat
+tools/
+
+# OS generated files
+.DS_Store
+Thumbs.db

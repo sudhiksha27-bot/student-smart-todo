@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart To-Do Assistant | MySQL Student Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Smart To-Do Assistant</h1>
+          <span class="subtitle">MySQL-Powered Intelligent Student Task Planner</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Database Connection Badge -->
+        <div id="dbBadge" class="db-badge loading">
+          <span class="status-dot"></span>
+          <span id="dbBadgeText">Connecting DB...</span>
+        </div>
+
+        <!-- User Profile Pill -->
+        <div class="user-pill">
+          <div class="avatar">AM</div>
+          <div class="user-details">
+            <span class="user-name">Alex Morgan</span>
+            <span class="user-role">CS Undergrad</span>
+          </div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button id="openNewTaskBtn" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Task
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Smart Reminders Banner -->
+    <div id="smartReminderBanner" class="alert-banner hidden">
+      <div class="alert-content">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+          <strong id="alertHeading">Urgent Attention Needed</strong>
+          <span id="alertSummary">You have overdue items and tasks due today.</span>
+        </div>
+      </div>
+      <div class="alert-actions">
+        <button id="viewOverdueBtn" class="btn btn-sm btn-danger-soft">View Overdue</button>
+        <button id="viewDueTodayBtn" class="btn btn-sm btn-warning-soft">Due Today</button>
+      </div>
+    </div>
+
+    <!-- Quick Action AI Toolbar -->
+    <section class="assistant-bar-card">
+      <div class="assistant-bar-header">
+        <div class="assistant-title">
+          <span class="sparkle">✨</span>
+          <strong>Natural Language Task Creator</strong>
+          <span class="hint">Type in plain English – AI auto-detects date, time, priority & category!</span>
+        </div>
+        <div class="assistant-buttons">
+          <button id="whatNextBtn" class="btn btn-ai-glow">
+            <span class="btn-icon">🎯</span>
+            What should I do next?
+          </button>
+          <button id="dailyPlanBtn" class="btn btn-secondary">
+            <span class="btn-icon">📅</span>
+            Daily Plan
+          </button>
+        </div>
+      </div>
+
+      <form id="nlpForm" class="nlp-form">
+        <div class="nlp-input-wrapper">
+          <svg class="search-sparkle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <input 
+            type="text" 
+            id="nlpInput" 
+            placeholder="Try: 'Submit OS assignment tomorrow 5pm high priority' or 'Read Calculus chapter tonight 8pm 45m'..." 
+            autocomplete="off"
+            required
+          />
+          <button type="submit" id="nlpSubmitBtn" class="btn btn-gradient">
+            <span>Create Task</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="nlp-suggestions">
+          <span class="tag-label">Quick Suggestions:</span>
+          <button type="button" class="chip-btn" data-prompt="Prepare for CS301 midterm exam tomorrow 4pm high priority 90 mins">Prepare for CS301 Midterm</button>
+          <button type="button" class="chip-btn" data-prompt="Submit SQL query optimization assignment tonight 11:59pm 60m">Submit SQL Assignment</button>
+          <button type="button" class="chip-btn" data-prompt="Practice LeetCode algorithms Friday 2pm medium priority">Practice LeetCode</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Productivity Dashboard Grid -->
+    <section class="stats-overview">
+      <div class="stat-card">
+        <div class="stat-meta">
+          <span class="stat-label">Total Tasks</span>
+          <div class="stat-icon bg-indigo">📋</div>
+        </div>
+        <div class="stat-value" id="statTotal">--</div>
+        <div class="stat-sub" id="statActive">-- active</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-meta">
+          <span class="stat-label">Completion Rate</span>
+          <div class="stat-icon bg-emerald">✅</div>
+        </div>
+        <div class="stat-value" id="statCompletionRate">0%</div>
+        <div class="progress-track">
+          <div id="statProgressBar" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+        <div class="stat-sub" id="statCompletedText">0 completed</div>
+      </div>
+
+      <div class="stat-card stat-clickable" id="cardOverdue">
+        <div class="stat-meta">
+          <span class="stat-label">Overdue</span>
+          <div class="stat-icon bg-rose">⚠️</div>
+        </div>
+        <div class="stat-value text-rose" id="statOverdue">0</div>
+        <div class="stat-sub">Requires immediate action</div>
+      </div>
+
+      <div class="stat-card stat-clickable" id="cardDueToday">
+        <div class="stat-meta">
+          <span class="stat-label">Due Today</span>
+          <div class="stat-icon bg-amber">⏰</div>
+        </div>
+        <div class="stat-value text-amber" id="statDueToday">0</div>
+        <div class="stat-sub">Deadline today</div>
+      </div>
+    </section>
+
+    <!-- Tasks Main Section -->
+    <section class="tasks-section">
+      <!-- Search, Filters and Sorting Bar -->
+      <div class="filter-controls-card">
+        <div class="filter-row-top">
+          <!-- Search Box -->
+          <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Search tasks by title or notes...">
+            <button id="clearSearchBtn" class="clear-search-btn hidden">&times;</button>
+          </div>
+
+          <!-- Quick Due Pill Filters -->
+          <div class="pill-group" id="dueFilterGroup">
+            <button class="pill active" data-due="">All Tasks</button>
+            <button class="pill" data-due="overdue">⚠️ Overdue (<span id="pillCountOverdue">0</span>)</button>
+            <button class="pill" data-due="today">⏰ Due Today (<span id="pillCountToday">0</span>)</button>
+            <button class="pill" data-due="upcoming">📅 Upcoming</button>
+          </div>
+        </div>
+
+        <div class="filter-row-bottom">
+          <!-- Category Filter -->
+          <div class="select-wrapper">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="select-wrapper">
+            <label for="priorityFilter">Priority:</label>
+            <select id="priorityFilter">
+              <option value="">All Priorities</option>
+              <option value="High">🔴 High Priority</option>
+              <option value="Medium">🟡 Medium Priority</option>
+              <option value="Low">🟢 Low Priority</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="select-wrapper">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter">
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
+          <!-- Sort Selector -->
+          <div class="select-wrapper">
+            <label for="sortBy">Sort By:</label>
+            <select id="sortBy">
+              <option value="priority_due">Smart Urgency (Priority + Due Date)</option>
+              <option value="due_date">Nearest Deadline</option>
+              <option value="priority">Highest Priority</option>
+              <option value="title">Title (A-Z)</option>
+            </select>
+          </div>
+
+          <button id="resetFiltersBtn" class="btn btn-sm btn-ghost">Reset Filters</button>
+        </div>
+      </div>
+
+      <!-- Task Cards Stream -->
+      <div class="tasks-header">
+        <h2 id="taskSectionTitle">All Tasks</h2>
+        <span id="taskCountBadge" class="count-badge">0 tasks</span>
+      </div>
+
+      <div id="tasksGrid" class="tasks-grid">
+        <!-- Rendered dynamically by JavaScript -->
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading your study tasks from MySQL...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 1: ADD / EDIT TASK -->
+  <!-- ======================================================== -->
+  <div id="taskModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Create New Task</h3>
+        <button id="closeModalBtn" class="modal-close">&times;</button>
+      </div>
+
+      <form id="taskForm">
+        <input type="hidden" id="taskId">
+
+        <div class="form-group">
+          <label for="formTitle">Task Title *</label>
+          <input type="text" id="formTitle" required placeholder="e.g. Complete Database Homework #3">
+        </div>
+
+        <!-- Live Auto-Priority Suggestion Widget -->
+        <div id="autoPrioritySuggestion" class="auto-priority-box hidden">
+          <div class="suggestion-left">
+            <span class="magic-wand">🪄</span>
+            <div>
+              <strong>Auto-Priority Recommendation:</strong>
+              <span id="suggestedPriorityBadge" class="badge">High</span>
+              <p id="suggestedPriorityReason" class="suggestion-reason"></p>
+            </div>
+          </div>
+          <button type="button" id="applyAutoPriorityBtn" class="btn btn-xs btn-outline">Apply</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="formCategory">Category</label>
+            <select id="formCategory" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="formPriority">Priority</label>
+            <select id="formPriority" required>
+              <option value="High">🔴 High</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="formDueDate">Due Date & Time *</label>
+            <input type="datetime-local" id="formDueDate" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formEstimatedMinutes">Estimated Time (mins)</label>
+            <input type="number" id="formEstimatedMinutes" min="5" max="600" value="45">
+            <div class="quick-minutes-chips">
+              <button type="button" class="min-chip" data-min="15">15m</button>
+              <button type="button" class="min-chip" data-min="30">30m</button>
+              <button type="button" class="min-chip" data-min="45">45m</button>
+              <button type="button" class="min-chip" data-min="60">60m</button>
+              <button type="button" class="min-chip" data-min="90">90m</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="formStatus">Status</label>
+          <select id="formStatus">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="formDescription">Description / Study Notes</label>
+          <textarea id="formDescription" rows="3" placeholder="Add study references, textbook pages, links or notes..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn btn-ghost">Cancel</button>
+          <button type="submit" id="saveTaskBtn" class="btn btn-primary">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 2: "WHAT SHOULD I DO NEXT?" ASSISTANT -->
+  <!-- ======================================================== -->
+  <div id="whatNextModal" class="modal-overlay hidden">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-header-brand">
+          <span class="ai-sparkle-large">🎯</span>
+          <div>
+            <h3>Smart Study Recommendation</h3>
+            <span class="modal-subtitle">AI-driven prioritization based on deadlines, priorities & workload</span>
+          </div>
+        </div>
+        <button id="closeWhatNextBtn" class="modal-close">&times;</button>
+      </div>
+
+      <div class="focus-mode-selector">
+        <span class="mode-label">Mode:</span>
+        <button class="mode-chip active" data-mode="balanced">⚖️ Balanced</button>
+        <button class="mode-chip" data-mode="quick_win">⚡ Quick Wins (≤30m)</button>
+        <button class="mode-chip" data-mode="deep_work">🧠 Deep Focus (≥60m)</button>
+      </div>
+
+      <div id="whatNextContent" class="what-next-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL 3: DAILY PLAN GENERATOR -->
+  <!-- ======================================================== -->
+  <div id="dailyPlanModal" class="modal-overlay hidden">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-header-brand">
+          <span class="ai-sparkle-large">📅</span>
+          <div>
+            <h3>Generated Daily Schedule</h3>
+            <span class="modal-subtitle">Time-blocked study schedule with automatic breaks</span>
+          </div>
+        </div>
+        <button id="closeDailyPlanBtn" class="modal-close">&times;</button>
+      </div>
+
+      <div id="dailyPlanContent" class="daily-plan-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <p>Student To-Do List Assistant &bull; Built with Python Flask &bull; MySQL Database</p>
+      <div class="footer-links">
+        <span id="footerDbIndicator">MySQL 8.0</span>
+        &bull;
+        <span>Smart Urgency Engine</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+
